@@ -29,5 +29,8 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+frontend/onevid-ui/node
+frontend/onevid-ui/node_modules
+frontend/onevid-ui/dist
 ### VS Code ###
 .vscode/

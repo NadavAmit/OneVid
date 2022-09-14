@@ -1,12 +1,16 @@
 package com.nadav.onevid.service;
 
+import com.nadav.onevid.dto.CommentDto;
 import com.nadav.onevid.dto.UploadVideoResponse;
 import com.nadav.onevid.dto.VideoDto;
+import com.nadav.onevid.model.Comment;
 import com.nadav.onevid.model.Video;
 import com.nadav.onevid.repository.VideoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -63,20 +67,18 @@ public class VideoService {
     public VideoDto getVideoDetails(String videoId){
         Video savedVideo = getVideoById(videoId);
 
-        VideoDto videoDto = new VideoDto();
-        videoDto.setVideoUrl(savedVideo.getVideoUrl());
-        videoDto.setThumbnailUrl(savedVideo.getThumbnailUrl());
-        videoDto.setId(savedVideo.getId());
-        videoDto.setTitle(savedVideo.getTitle());
-        videoDto.setDescription(savedVideo.getDescription());
-        videoDto.setVideoStatus(savedVideo.getVideoStatus());
-        videoDto.setTags(savedVideo.getTags());
+        increaseVideoCount(savedVideo);
+        userService.addVideoToHistory(videoId);
 
-        //CHECK - for problem
-        videoDto.setLikeCount(savedVideo.getLikes().get());
-        videoDto.setDislikeCount(savedVideo.getDislikes().get());
+
+        VideoDto videoDto = mapToVideoDto(savedVideo);
 
         return videoDto;
+    }
+
+    private void increaseVideoCount(Video savedVideo) {
+        savedVideo.incrementViewCount();
+        videoRepository.save(savedVideo);
     }
 
     public VideoDto likeVideo(String videoId) {
@@ -97,16 +99,7 @@ public class VideoService {
 
         videoRepository.save(video);
 
-        VideoDto videoDto = new VideoDto();
-        videoDto.setVideoUrl(video.getVideoUrl());
-        videoDto.setThumbnailUrl(video.getThumbnailUrl());
-        videoDto.setId(video.getId());
-        videoDto.setTitle(video.getTitle());
-        videoDto.setDescription(video.getDescription());
-        videoDto.setVideoStatus(video.getVideoStatus());
-        videoDto.setTags(video.getTags());
-        videoDto.setLikeCount(video.getLikes().get());
-        videoDto.setDislikeCount(video.getDislikes().get());
+        VideoDto videoDto = mapToVideoDto(video);
 
         return videoDto;
     }
@@ -129,6 +122,12 @@ public class VideoService {
 
         videoRepository.save(video);
 
+        VideoDto videoDto = mapToVideoDto(video);
+
+        return videoDto;
+    }
+
+    private VideoDto mapToVideoDto(Video video) {
         VideoDto videoDto = new VideoDto();
         videoDto.setVideoUrl(video.getVideoUrl());
         videoDto.setThumbnailUrl(video.getThumbnailUrl());
@@ -139,7 +138,35 @@ public class VideoService {
         videoDto.setTags(video.getTags());
         videoDto.setLikeCount(video.getLikes().get());
         videoDto.setDislikeCount(video.getDislikes().get());
-
+        videoDto.setViewCount(video.getViewCount().get());
         return videoDto;
+    }
+
+    public void addComment(String videoId, CommentDto commentDto) {
+        Video video = getVideoById(videoId);
+        Comment comment = new Comment();
+        comment.setText(commentDto.getCommentText());
+        comment.setAuthorId(commentDto.getAuthorId());
+        video.addComment(comment);
+
+        videoRepository.save(video);
+    }
+
+    public List<CommentDto> getAllComments(String videoId) {
+        Video video = getVideoById(videoId);
+        List<Comment> commentList = video.getCommentList();
+
+        return commentList.stream().map(this::mapToCommentDto).toList();
+    }
+
+    private CommentDto mapToCommentDto(Comment comment) {
+        CommentDto commentDto = new CommentDto();
+        commentDto.setCommentText(comment.getText());
+        commentDto.setAuthorId(comment.getAuthorId());
+        return commentDto;
+    }
+
+    public List<VideoDto> getAllVideos() {
+        return videoRepository.findAll().stream().map(this::mapToVideoDto).toList();
     }
 }

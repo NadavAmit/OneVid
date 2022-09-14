@@ -1,6 +1,7 @@
 package com.nadav.onevid.service;
 
 import com.nadav.onevid.model.User;
+import com.nadav.onevid.model.Video;
 import com.nadav.onevid.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -52,4 +53,32 @@ public class UserService {
     }
 
 
+    public void addVideoToHistory(String videoId) {
+        User currentUser = getCurrentUser();
+        currentUser.addToVideoHistory(videoId);
+        userRepository.save(currentUser);
+    }
+
+    public void subscribeUser(String userId) {
+        User currentUser = getCurrentUser();
+        currentUser.addToSubscribedToUsers(userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Cannot find user with userId " + userId));
+        user.addToSubscribers(currentUser.getId());
+
+        userRepository.save(currentUser);
+        userRepository.save(user);
+    }
+    public void unsubscribeUser(String userId) {
+        User currentUser = getCurrentUser();
+        currentUser.removeFromSubscribedToUsers(userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Cannot find user with userId " + userId));
+        user.removeFromSubscribers(currentUser.getId());
+
+        userRepository.save(currentUser);
+        userRepository.save(user);
+    }
 }

@@ -13,6 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class VideoService {
 
     private final S3Service s3Service;
+
+    private final UserService userService;
     private final VideoRepository videoRepository;
     public UploadVideoResponse uploadVideo(MultipartFile multipartFile) {
 
@@ -69,6 +71,74 @@ public class VideoService {
         videoDto.setDescription(savedVideo.getDescription());
         videoDto.setVideoStatus(savedVideo.getVideoStatus());
         videoDto.setTags(savedVideo.getTags());
+
+        //CHECK - for problem
+        videoDto.setLikeCount(savedVideo.getLikes().get());
+        videoDto.setDislikeCount(savedVideo.getDislikes().get());
+
+        return videoDto;
+    }
+
+    public VideoDto likeVideo(String videoId) {
+        Video video = getVideoById(videoId);
+
+        if(userService.ifLikedVideo(videoId)){
+            video.decrementLikes();
+            userService.removeFromLikedVideos(videoId);
+        } else if(userService.ifDisLikedVideo(videoId)){
+            video.decrementDisLikes();
+            userService.removeFromDisLikedVideos(videoId);
+            video.incrementLikes();
+            userService.addToLikedVideos(videoId);
+        }else {
+            video.incrementLikes();
+            userService.addToLikedVideos(videoId);
+        }
+
+        videoRepository.save(video);
+
+        VideoDto videoDto = new VideoDto();
+        videoDto.setVideoUrl(video.getVideoUrl());
+        videoDto.setThumbnailUrl(video.getThumbnailUrl());
+        videoDto.setId(video.getId());
+        videoDto.setTitle(video.getTitle());
+        videoDto.setDescription(video.getDescription());
+        videoDto.setVideoStatus(video.getVideoStatus());
+        videoDto.setTags(video.getTags());
+        videoDto.setLikeCount(video.getLikes().get());
+        videoDto.setDislikeCount(video.getDislikes().get());
+
+        return videoDto;
+    }
+
+    public VideoDto disLikeVideo(String videoId) {
+        Video video = getVideoById(videoId);
+
+        if(userService.ifDisLikedVideo(videoId)){
+            video.decrementDisLikes();
+            userService.removeFromDisLikedVideos(videoId);
+        } else if(userService.ifLikedVideo(videoId)){
+            video.decrementLikes();
+            userService.removeFromLikedVideos(videoId);
+            video.incrementDisLikes();
+            userService.addToDisLikedVideos(videoId);
+        }else {
+            video.incrementDisLikes();
+            userService.addToDisLikedVideos(videoId);
+        }
+
+        videoRepository.save(video);
+
+        VideoDto videoDto = new VideoDto();
+        videoDto.setVideoUrl(video.getVideoUrl());
+        videoDto.setThumbnailUrl(video.getThumbnailUrl());
+        videoDto.setId(video.getId());
+        videoDto.setTitle(video.getTitle());
+        videoDto.setDescription(video.getDescription());
+        videoDto.setVideoStatus(video.getVideoStatus());
+        videoDto.setTags(video.getTags());
+        videoDto.setLikeCount(video.getLikes().get());
+        videoDto.setDislikeCount(video.getDislikes().get());
 
         return videoDto;
     }

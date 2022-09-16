@@ -8,6 +8,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -63,8 +65,7 @@ public class UserService {
         User currentUser = getCurrentUser();
         currentUser.addToSubscribedToUsers(userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot find user with userId " + userId));
+        User user = getUserById(userId);
         user.addToSubscribers(currentUser.getId());
 
         userRepository.save(currentUser);
@@ -74,11 +75,20 @@ public class UserService {
         User currentUser = getCurrentUser();
         currentUser.removeFromSubscribedToUsers(userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot find user with userId " + userId));
+        User user = getUserById(userId);
         user.removeFromSubscribers(currentUser.getId());
 
         userRepository.save(currentUser);
         userRepository.save(user);
+    }
+
+    public Set<String> userHistory(String userId) {
+        User user = getUserById(userId);
+        return user.getVideoHistory();
+    }
+
+    private User getUserById(String userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Cannot find user with userId " + userId));
     }
 }

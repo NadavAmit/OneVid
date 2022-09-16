@@ -29,10 +29,10 @@ public class VideoController {
     public String uploadThumbnail(@RequestParam("file") MultipartFile file, @RequestParam("videoId") String videoId) {
         return videoService.uploadThumbnail(file,videoId);
     }
-    @GetMapping
-    public String getHey(){
-        return new String ("hello");
-    }
+//    @GetMapping
+//    public String getHey(){
+//        return new String ("hello");
+//    }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
